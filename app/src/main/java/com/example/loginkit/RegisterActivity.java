@@ -3,19 +3,22 @@ package com.example.loginkit;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 
-import com.example.loginkit.model.Login;
+import com.example.loginkit.model.ErrorResponse;
+import com.example.loginkit.model.Register;
 import com.example.loginkit.model.RegisterResponse;
 import com.example.loginkit.rest.ApiClient;
 import com.example.loginkit.rest.ApiInterface;
 import com.example.loginkit.sessionManager.SessionManager;
+
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -24,14 +27,16 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class LoginActivity extends AppCompatActivity {
+public class RegisterActivity extends AppCompatActivity {
 
+    @BindView(R.id.txt_full_name)
+    EditText txt_full_name;
     @BindView(R.id.txt_email)
-    EditText inputEmail;
-
+    EditText txt_email;
     @BindView(R.id.txt_password)
-    EditText inputPassword;
-
+    EditText txt_password;
+    @BindView(R.id.txt_confirm_password)
+    EditText txt_confirm_password;
     @BindView(R.id.progressBar)
     ProgressBar progressBar;
 
@@ -40,49 +45,63 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        /*if (auth.getCurrentUser() != null) {
-            startActivity(new Intent(LoginActivity.this, MainActivity.class));
-            finish();
-        }*/
-
-        // set the view now
-        setContentView(R.layout.activity_login);
+        setContentView(R.layout.activity_signup);
 
         ButterKnife.bind(this);
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
         sessionManager = new SessionManager(this);
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        progressBar.setVisibility(View.GONE);
     }
 
     @OnClick(R.id.btn_link_to_reset_password)
-    protected void onResetPassword() {
-        startActivity(new Intent(LoginActivity.this, ResetPasswordActivity.class));
+    void onResetPassword() {
+        startActivity(new Intent(RegisterActivity.this, ResetPasswordActivity.class));
     }
 
-    @OnClick(R.id.btn_login)
-    protected void onSignIn() {
-        String email = inputEmail.getText().toString();
-        final String password = inputPassword.getText().toString();
+    @OnClick(R.id.btn_link_to_login)
+    void onSignIn() {
+        finish();
+    }
 
-        if (TextUtils.isEmpty(email)) {
+    @OnClick(R.id.btn_register)
+    void onSignUp() {
+        String full_name = txt_full_name.getText().toString().trim();
+        String email = txt_email.getText().toString().trim();
+        String password = txt_password.getText().toString().trim();
+        String confirm_password = txt_confirm_password.getText().toString().trim();
+
+        if (TextUtils.isEmpty(full_name)) {
+            Toast.makeText(getApplicationContext(), "Enter full name!", Toast.LENGTH_SHORT).show();
+            return;
+        } else if (TextUtils.isEmpty(email)) {
             Toast.makeText(getApplicationContext(), "Enter email address!", Toast.LENGTH_SHORT).show();
             return;
-        }
-
-        if (TextUtils.isEmpty(password)) {
+        } else if (TextUtils.isEmpty(password)) {
             Toast.makeText(getApplicationContext(), "Enter password!", Toast.LENGTH_SHORT).show();
             return;
+        } else if (TextUtils.isEmpty(confirm_password)) {
+            Toast.makeText(getApplicationContext(), "Enter confirm password!", Toast.LENGTH_SHORT).show();
+            return;
         }
-
+        /*else if (password.length() < 6) {
+            Toast.makeText(getApplicationContext(), "Password too short, enter minimum 6 characters!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        else if (!password.matches(confirm_password)) {
+            Toast.makeText(getApplicationContext(), "Password and confirm password does not match", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        */
         progressBar.setVisibility(View.VISIBLE);
-        //authenticate user
+        //create user
         ApiInterface apiService = ApiClient.getClient().create(ApiInterface.class);
 
-        Call<RegisterResponse> call = apiService.signIn(new Login(email, password));
+        Call<RegisterResponse> call = apiService.signUp(new Register(full_name, email, password));
         call.enqueue(new Callback<RegisterResponse>() {
             @Override
             public void onResponse(Call<RegisterResponse> call, Response<RegisterResponse> response) {
@@ -94,9 +113,9 @@ public class LoginActivity extends AppCompatActivity {
                                 response.body().getData().getEmail(),
                                 response.body().getData().getToken());
                         sessionManager.checkLogin();
-                        Toast.makeText(LoginActivity.this, "Logged in!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(RegisterActivity.this, "Registered Successfully!", Toast.LENGTH_SHORT).show();
                     } else {
-                        Toast.makeText(LoginActivity.this, response.body().getError().getDescription(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(RegisterActivity.this, response.body().getError().getDescription(), Toast.LENGTH_SHORT).show();
                     }
                 }
                 progressBar.setVisibility(View.GONE);
@@ -106,15 +125,8 @@ public class LoginActivity extends AppCompatActivity {
             public void onFailure(Call<RegisterResponse> call, Throwable t) {
                 // Log error here since request failed
                 progressBar.setVisibility(View.GONE);
-                Toast.makeText(LoginActivity.this, "Something went wrong", Toast.LENGTH_SHORT).show();
+                Toast.makeText(RegisterActivity.this, "ErrorResponse while downloading database", Toast.LENGTH_SHORT).show();
             }
         });
     }
-
-    @OnClick(R.id.btn_link_to_register)
-    protected void onSignUp() {
-        startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
-    }
-
 }
-

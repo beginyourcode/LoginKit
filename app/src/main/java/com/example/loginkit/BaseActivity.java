@@ -26,6 +26,9 @@ import androidx.fragment.app.FragmentManager;
 
 import com.example.loginkit.fragment.MainFragment;
 import com.example.loginkit.fragment.ViewPagerFragment;
+import com.example.loginkit.sessionManager.SessionManager;
+
+import java.util.HashMap;
 
 import br.liveo.interfaces.OnItemClickListener;
 import br.liveo.interfaces.OnPrepareOptionsMenuLiveo;
@@ -36,25 +39,31 @@ public class BaseActivity extends NavigationLiveo implements OnItemClickListener
 
     private HelpLiveo mHelpLiveo;
 
+    SessionManager sessionManager;
+
     @Override
     public void onInt(Bundle savedInstanceState) {
+        sessionManager = new SessionManager(this);
+        sessionManager.redirectToLogin();
+
+        HashMap<String, String> user = sessionManager.getUser();
 
         // User Information
-        this.userName.setText("Rudson Lima");
-        this.userEmail.setText("rudsonlive@gmail.com");
+        this.userName.setText(user.get(SessionManager.KEY_FULL_NAME));
+        this.userEmail.setText(user.get(SessionManager.KEY_EMAIL));
         this.userPhoto.setImageResource(R.drawable.ic_rudsonlive);
         this.userBackground.setImageResource(R.drawable.ic_user_background_first);
 
         // Creating items navigation
         mHelpLiveo = new HelpLiveo();
         mHelpLiveo.add(getString(R.string.inbox), R.drawable.ic_inbox_black_24dp, 7);
-        mHelpLiveo.addSubHeader(getString(R.string.categories)); //Item subHeader
+        mHelpLiveo.addSubHeader(getString(R.string.categories));
         mHelpLiveo.add(getString(R.string.starred), R.drawable.ic_star_black_24dp);
         mHelpLiveo.add(getString(R.string.sent_mail), R.drawable.ic_send_black_24dp);
         mHelpLiveo.addNoCheck(getString(R.string.drafts), R.drawable.ic_drafts_black_24dp);
         mHelpLiveo.addSeparator(); //Item separator
         mHelpLiveo.add(getString(R.string.trash), R.drawable.ic_delete_black_24dp);
-        mHelpLiveo.add(getString(R.string.spam), R.drawable.ic_report_black_24dp, 120);
+        mHelpLiveo.add(getString(R.string.logout), R.drawable.ic_power_settings_new_black_24dp);
 
         //{optional} - Header Customization - method customHeader
         //View mCustomHeader = getLayoutInflater().inflate(R.layout.custom_header_user, this.getListView(), false);
@@ -108,20 +117,26 @@ public class BaseActivity extends NavigationLiveo implements OnItemClickListener
 
     @Override
     public void onItemClick(int position) {
-        Fragment mFragment;
+        Fragment mFragment = null;
         FragmentManager mFragmentManager = getSupportFragmentManager();
 
-        switch (position){
+        switch (position) {
             case 2:
                 mFragment = new ViewPagerFragment();
                 break;
+
+            case 7:
+                sessionManager.logoutUser();
+                sessionManager.redirectToLogin();
+                break;
+
 
             default:
                 mFragment = MainFragment.newInstance(mHelpLiveo.get(position).getName());
                 break;
         }
 
-        if (mFragment != null){
+        if (mFragment != null) {
             mFragmentManager.beginTransaction().replace(R.id.container, mFragment).commit();
         }
 

@@ -8,7 +8,6 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 
@@ -23,8 +22,8 @@ public class ResetPasswordActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reset_password);
 
-        inputEmail = findViewById(R.id.email);
-        btnReset = findViewById(R.id.btn_reset_password);
+        inputEmail = findViewById(R.id.txt_email);
+        btnReset = findViewById(R.id.btn_link_to_reset_password);
         btnBack = findViewById(R.id.btn_back);
         progressBar = findViewById(R.id.progressBar);
 
